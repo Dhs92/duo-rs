@@ -17,6 +17,8 @@ lazy_static! {
     static ref CONFIG: Config = match Config::build("config.json") {
         Ok(conf) => conf,
         Err(_) => {
+            initialize_logging_config_fail().unwrap();
+
             let conf = Config::default();
 
             error!("Config not found, creating default. Add your token to `config.json` and restart the bot!");
@@ -26,8 +28,6 @@ lazy_static! {
             write("config.json", conf_str.as_bytes()).unwrap();
 
             std::process::exit(4);
-
-            unreachable!()
         }
     };
 }
@@ -58,6 +58,25 @@ fn initialize_logging() -> Result<(), Box<dyn std::error::Error>> {
     CombinedLogger::init(vec![
         TermLogger::new(
             CONFIG.log_level(),
+            LogConfig::default(),
+            TerminalMode::Mixed,
+        )
+        .expect("Unable to create TermLogger"),
+        WriteLogger::new(LevelFilter::Info, LogConfig::default(), log_file),
+    ])?;
+
+    Ok(())
+}
+
+fn initialize_logging_config_fail() -> Result<(), Box<dyn std::error::Error>> {
+    let log_file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open("duo.log")?;
+
+    CombinedLogger::init(vec![
+        TermLogger::new(
+            LevelFilter::Error,
             LogConfig::default(),
             TerminalMode::Mixed,
         )
