@@ -19,11 +19,15 @@ lazy_static! {
         Err(_) => {
             let conf = Config::default();
 
+            error!("Config not found, creating default. Add your token to `config.json` and restart the bot!");
+
             let conf_str = serde_json::to_string_pretty(&conf).unwrap();
             File::create("config.json").unwrap();
             write("config.json", conf_str.as_bytes()).unwrap();
 
-            conf
+            std::process::exit(4);
+
+            unreachable!()
         }
     };
 }
