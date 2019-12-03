@@ -8,16 +8,15 @@ use serenity::Client;
 use simplelog::Config as LogConfig;
 use simplelog::*;
 use std::fs::{write, File, OpenOptions};
-// use std::collections::HashMap;
 use commands::GENERAL_GROUP;
 use util::Config;
 use util::Handler;
 
 lazy_static! {
-    static ref CONFIG: Config = match Config::build("config.json") {
+    static ref CONFIG: Config = match Config::from_file("config.json") {
         Ok(conf) => conf,
         Err(_) => {
-            initialize_logging_config_fail().unwrap();
+            initialize_logging(false).unwrap();
 
             let conf = Config::default();
 
@@ -36,7 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let handler = Handler {};
     let mut client = Client::new(CONFIG.token(), handler)?;
 
-    initialize_logging()?;
+    initialize_logging(true)?;
 
     client.with_framework(
         StandardFramework::new()
@@ -49,30 +48,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn initialize_logging() -> Result<(), Box<dyn std::error::Error>> {
+fn initialize_logging(found: bool) -> Result<(), Box<dyn std::error::Error>> {
     let log_file = OpenOptions::new()
         .write(true)
         .create(true)
+        .truncate(true)
         .open("duo.log")?;
 
-    CombinedLogger::init(vec![
-        TermLogger::new(
-            CONFIG.log_level(),
-            LogConfig::default(),
-            TerminalMode::Mixed,
-        )
-        .expect("Unable to create TermLogger"),
-        WriteLogger::new(LevelFilter::Info, LogConfig::default(), log_file),
-    ])?;
-
-    Ok(())
-}
-
-fn initialize_logging_config_fail() -> Result<(), Box<dyn std::error::Error>> {
-    let log_file = OpenOptions::new()
-        .write(true)
-        .create(true)
-        .open("duo.log")?;
+    let log_level = if found {
+        CONFIG.log_level()
+    } else {
+        LevelFilter::Info
+    };
 
     CombinedLogger::init(vec![
         TermLogger::new(
@@ -81,8 +68,9 @@ fn initialize_logging_config_fail() -> Result<(), Box<dyn std::error::Error>> {
             TerminalMode::Mixed,
         )
         .expect("Unable to create TermLogger"),
-        WriteLogger::new(LevelFilter::Info, LogConfig::default(), log_file),
+        WriteLogger::new(log_level, LogConfig::default(), log_file),
     ])?;
 
     Ok(())
+
 }
