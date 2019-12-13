@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize, Deserializer, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use simplelog;
 use std::default::Default;
 use std::fs;
@@ -42,7 +42,7 @@ impl Default for Config {
 // this will allow de/serialization of LevelFilter
 pub mod serde_level_filter {
     use super::*;
-    
+
     #[allow(clippy::trivially_copy_pass_by_ref)]
     pub fn serialize<S>(lf: &simplelog::LevelFilter, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -50,7 +50,7 @@ pub mod serde_level_filter {
     {
         lf.to_string().serialize(serializer)
     }
-    
+
     pub fn deserialize<'de, D>(deserializer: D) -> Result<simplelog::LevelFilter, D::Error>
     where
         D: Deserializer<'de>,
@@ -59,5 +59,4 @@ pub mod serde_level_filter {
         let filter = string.parse().map_err(serde::de::Error::custom)?;
         Ok(filter)
     }
-
 }

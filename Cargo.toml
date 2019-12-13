@@ -9,7 +9,10 @@ edition = "2018"
 [dependencies]
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
-serenity = "0.7.3"
 log = "*"
 simplelog = "0.7.4"
 lazy_static = "*"
+
+[dependencies.serenity]
+features = ["cache", "framework", "standard_framework", "voice", "http", "rustls_backend"]
+version = "0.7.3"
